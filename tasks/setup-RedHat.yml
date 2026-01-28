@@ -1,0 +1,11 @@
+---
+- name: Install SNMP packages for RedHat/CentOS
+  package:
+    name: "{{ package_to_install }}"
+    state: present
+  loop: "{{ snmpd_packages_redhat }}"
+  loop_control:
+    loop_var: package_to_install
+  tags: 
+    - snmpd
+    - snmp

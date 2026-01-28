@@ -1,0 +1,44 @@
+---
+
+# check that the snmpd_community_string variable is not the default one
+- name: Check SNMP community string is not default
+  assert:
+    that:
+      - snmpd_community_string != "public"
+    fail_msg: "The SNMP community string is set to the default value 'public'. Please override it with a secure value."
+  tags:
+    - snmpd
+    - snmp
+
+- name: Include OS-specific setup tasks
+  include_tasks: "setup-{{ ansible_os_family }}.yml"
+  when: ansible_os_family in ['Debian', 'RedHat']
+  tags:
+    - snmp
+    - snmpd
+
+- name: Configure snmpd
+  template: 
+    src: "{{ snmpd_configuration_template }}"
+    dest: "{{ snmpd_configuration_file }}"
+    backup: "{{ snmpd_backup }}"
+  notify: restart snmpd
+  tags: 
+    - snmpd
+    - snmp
+
+- name: Start Service snmpd
+  service: 
+    name: snmpd 
+    state: started 
+    enabled: yes
+  tags: 
+    - snmpd
+    - snmp
+
+- name: Include OS-specific post-configuration tasks
+  include_tasks: "post-{{ ansible_os_family }}.yml"
+  when: ansible_os_family in ['Debian', 'RedHat']
+  tags:
+    - snmp
+    - snmpd

@@ -1,0 +1,14 @@
+---
+# allow snmpd to execute docker commands, like searching on logs or executing docker commands
+- name: Adding existing user '{{ snmpd_post_debian_snmpd_user }}' to group docker
+  user:
+    name: "{{ snmpd_post_debian_snmpd_user }}"
+    groups: "{{ snmpd_post_debian_snmpd_additional_group }}"
+    append: yes
+  notify: restart snmpd
+  ignore_errors: "{{ ansible_check_mode }}"
+  when: "{{ snmpd_post_debian_configure_user_docker }}"
+  tags:
+    - snmpd
+    - snmp
+    - snmpd_docker

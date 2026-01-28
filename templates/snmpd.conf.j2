@@ -1,0 +1,56 @@
+# {{ ansible_managed }}
+###########################
+# Access Control
+###########################
+#Map the community name into security name
+## sec.name source community
+com2sec local localhost {{ snmpd_community_string }}
+com2sec network {{ snmpd_network }} {{ snmpd_community_string }}
+
+#Map security name to groupname
+
+## Access.group.name sec.model sec.name
+group {{ snmpd_group_name }} v2c local
+group {{ snmpd_group_name }} v2c network
+group {{ snmpd_group_name }} v1 network
+#Create view
+
+## MIB.view.name incl/excl MIB.subtree mask
+view all included .1 80
+#Grant access to group
+
+## group.name context sec.model sec.level prefix read write notif
+access {{ snmpd_group_name }} "" v2c noauth exact all none none
+access {{ snmpd_group_name }} "" v1 noauth exact all none none
+
+############################
+# System information
+############################
+syscontact {{ snmpd_syscontact }}
+syslocation {{ snmpd_syslocation }}
+sysdescr {{ snmpd_sysdescr }}
+
+############################
+# Process Monitoring
+############################
+#proc httpd
+
+############################
+# Disk Usage Monitoring
+disk {{ snmpd_disk_path }} {{ snmpd_disk_threshold }}
+
+###########################
+# Raid Disk Monitoring
+#extend .1.3.6.1.2.1.2021.2 check_raid /bin/cat /var/log/raid_status.log
+
+{% if snmpd_configs is defined %}
+###########################
+# Additional Monitoring
+{% for config in snmpd_configs %}
+{{ config }}
+{% endfor %}
+
+{% endif %}
+############################
+# System Load Monitoring
+#load 10

@@ -1,0 +1,42 @@
+---
+# SNMP community string for authentication (should be overridden with vault-encrypted value)
+snmpd_community_string: "public"
+
+# Network allowed to access SNMP
+snmpd_network: "193.136.7.0/24"
+
+# Template to be used by this role with snmpd configuration
+snmpd_configuration_template: "templates/snmpd.conf.j2"
+
+# Path to the snmpd configuration file on the target system
+snmpd_configuration_file: "/etc/snmp/snmpd.conf"
+
+# Enable or disable backup of existing snmpd.conf
+snmpd_backup: true
+
+# Packages to install (Debian/Ubuntu)
+snmpd_packages_debian:
+  - snmpd
+  - snmp
+  - snmp-mibs-downloader
+
+# Packages to install (RedHat/CentOS)
+snmpd_packages_redhat:
+  - net-snmp
+
+# post configuration for Debian/Ubuntu
+snmpd_post_debian_snmpd_user: "Debian-snmp"
+snmpd_post_debian_snmpd_additional_group: "docker"
+
+# System information
+snmpd_syscontact: "admin@example.com"
+snmpd_syslocation: "{{ inventory_hostname }}"
+snmpd_sysdescr: "{{ ansible_distribution }} {{ ansible_distribution_version }}"
+
+# Access control
+snmpd_group_name: "MyROGroup"
+
+# Disk monitoring
+snmpd_disk_path: "/"
+snmpd_disk_threshold: "80%"
+snmpd_post_debian_configure_user_docker: "{{ ansible_distribution_version is version('20.04', '>=')}}"
