@@ -1,0 +1,40 @@
+---
+galaxy_info:
+  role_name: snmpd
+  author: fccn
+  description: Install and configure Net-SNMP daemon (snmpd) for monitoring Linux servers with SNMP-based monitoring tools like Icinga, Nagios, and Cacti
+  company: FCCN
+  
+  license: GPL-3.0-only
+  
+  min_ansible_version: "2.9"
+  
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+        - noble
+    - name: Debian
+      versions:
+        - buster
+        - bullseye
+        - bookworm
+    - name: EL
+      versions:
+        - "7"
+        - "8"
+        - "9"
+  
+  galaxy_tags:
+    - monitoring
+    - snmp
+    - snmpd
+    - netsnmp
+    - system
+    - infrastructure
+    - nagios
+    - icinga
+    - cacti
+
+dependencies: []
