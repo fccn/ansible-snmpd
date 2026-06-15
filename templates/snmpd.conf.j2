@@ -38,10 +38,17 @@ sysdescr {{ snmpd_sysdescr }}
 ############################
 # Disk Usage Monitoring
 disk {{ snmpd_disk_path }} {{ snmpd_disk_threshold }}
+realStorageUnits 0
 
 ###########################
 # Raid Disk Monitoring
 #extend .1.3.6.1.2.1.2021.2 check_raid /bin/cat /var/log/raid_status.log
+{% if snmpd_raid_disk_configs is defined %}
+{% for config in snmpd_raid_disk_configs %}
+{{ config }}
+{% endfor %}
+
+{% endif %}
 
 {% if snmpd_configs is defined %}
 ###########################
@@ -51,6 +58,20 @@ disk {{ snmpd_disk_path }} {{ snmpd_disk_threshold }}
 {% endfor %}
 
 {% endif %}
+
 ############################
 # System Load Monitoring
+{% if snmpd_load is defined %}
+load {{ snmpd_load }}
+{% elif snmpd_load_auto_enabled %}
+load {{ ansible_processor_vcpus * snmpd_load_1min_factor }} {{ ansible_processor_vcpus * snmpd_load_5min_factor }} {{ ansible_processor_vcpus * snmpd_load_15min_factor }}
+{% else %}
 #load 10
+{% endif %}
+
+{% if snmpd_network_bonding is defined %}
+############################
+# Network bonding
+extend bondings {{ snmpd_network_bonding }}
+
+{% endif %}

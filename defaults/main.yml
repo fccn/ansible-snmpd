@@ -40,3 +40,13 @@ snmpd_group_name: "MyROGroup"
 snmpd_disk_path: "/"
 snmpd_disk_threshold: "80%"
 snmpd_post_debian_configure_user_docker: "{{ ansible_distribution_version is version('20.04', '>=')}}"
+
+# Load monitoring
+# Set to true to auto-configure load thresholds based on CPU count
+snmpd_load_auto_enabled: false
+# Multipliers used when snmpd_load_auto_enabled is true
+snmpd_load_1min_factor: 2
+snmpd_load_5min_factor: 1
+snmpd_load_15min_factor: 1
+# Or set snmpd_load directly (e.g. "12 8 4") to override; takes precedence over auto
+# snmpd_load: "12 8 4"
