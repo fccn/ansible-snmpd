@@ -224,6 +224,111 @@ snmpd_configs:
   - "extend raid_status /bin/cat /proc/mdstat"
 ```
 
+## Real-World Example: Multi-Service Host Monitoring
+
+In production environments a single host often runs multiple services. The following patterns, drawn from [fccn/nau_playbooks](https://github.com/fccn/nau_playbooks/), show how to scale this role across a fleet where hosts belong to multiple groups simultaneously.
+
+### Inventory: One Host, Multiple Groups
+
+A host appearing in several groups automatically inherits all the `group_vars` from each group:
+
+```ini
+# inventory/hosts.ini
+[redis_docker_servers]
+nau02-qa.nau.fccn.pt  ansible_host=172.23.1.243
+
+[elasticsearch_docker_servers]
+nau02-qa.nau.fccn.pt  ansible_host=172.23.1.243
+
+[richie_mysql_docker_servers]
+nau02-qa.nau.fccn.pt  ansible_host=172.23.1.243
+
+[financial_manager_mysql_docker_servers]
+nau02-qa.nau.fccn.pt  ansible_host=172.23.1.243
+
+[financial_manager_docker_servers]
+nau02-qa.nau.fccn.pt  ansible_host=172.23.1.243
+
+# Parent group composed from children — automatic membership
+[observability_docker_servers:children]
+mongo_docker_servers
+elasticsearch_docker_servers
+redis_docker_servers
+richie_mysql_docker_servers
+```
+
+### Per-Group SNMPD Extensions
+
+Each service group defines its own SNMP monitoring extensions in `group_vars`:
+
+```yaml
+# group_vars/redis_docker_servers.yml
+redis_snmpd_configs:
+  - extend redis_healthcheck        /usr/bin/make --no-print-directory -C /nau/ops/redis silent-healthcheck
+  - extend redis_connected_clients  /usr/bin/make --no-print-directory -C /nau/ops/redis redis-connected-clients
+
+# group_vars/mongo_docker_servers.yml
+mongo_snmpd_configs:
+  - extend mongo_healthcheck        /usr/bin/make --no-print-directory -C /nau/ops/mongo silent-healthcheck
+  - extend mongo_connections_current /usr/bin/make --no-print-directory -C /nau/ops/mongo mongo-connections-current
+
+# group_vars/clickhouse_servers.yml
+clickhouse_snmpd_configs:
+  - extend clickhouse_healthcheck             /usr/bin/make --no-print-directory -C /nau/ops/clickhouse silent-healthcheck
+  - extend clickhouse_system_processes_count  /usr/bin/make --no-print-directory -C /nau/ops/clickhouse clickhouse-system-processes-count
+```
+
+### Centralized Aggregation in group_vars/all
+
+A single variable in `group_vars/all/monitoring.yml` merges all service-specific configs. Only the groups present on a host contribute — undefined variables are skipped with the `is defined` guard:
+
+```yaml
+# group_vars/all/monitoring.yml
+snmpd_configs: "{{
+  ( redis_snmpd_configs if redis_snmpd_configs is defined else [] ) +
+  ( elasticsearch_snmpd_configs if elasticsearch_snmpd_configs is defined else [] ) +
+  ( richie_mysql_snmpd_configs if richie_mysql_snmpd_configs is defined else [] ) +
+  ( mongo_snmpd_configs if mongo_snmpd_configs is defined else [] ) +
+  ( financial_manager_mysql_snmpd_configs if financial_manager_mysql_snmpd_configs is defined else [] ) +
+  ( financial_manager_snmpd_configs if financial_manager_snmpd_configs is defined else [] ) +
+  ( xtradb_snmpd_configs if xtradb_snmpd_configs is defined else [] ) +
+  ( clickhouse_snmpd_configs if clickhouse_snmpd_configs is defined else [] ) +
+  []
+}}"
+```
+
+A host in `redis_docker_servers` and `elasticsearch_docker_servers` automatically gets both sets of extensions merged into `snmpd_configs` — no per-host configuration required.
+
+### Playbook: Multiple Roles per Host Group
+
+The deploy playbook stacks multiple roles (including `ansible-snmpd`) onto a single host group play:
+
+```yaml
+# deploy.yml
+- name: Configure load balancer
+  hosts: balancer_servers
+  become: true
+  roles:
+    - role: ansible-keepalived
+    - role: geerlingguy.docker
+    - role: ansible-firewall
+    - role: ansible-docker-deploy
+    - role: haproxy-netsnmp-perl
+    - role: ansible-snmpd
+    - role: nau_check_urls
+
+- name: Configure Redis Docker servers
+  hosts: redis_docker_servers
+  become: true
+  roles:
+    - role: ansible-keepalived
+    - role: geerlingguy.docker
+    - role: ansible-snmpd
+    - role: redis-docker-deploy
+```
+
+Because `snmpd_configs` is assembled automatically from whichever service groups the host belongs to, the same `ansible-snmpd` role call works correctly for every host in the fleet regardless of how many services it runs.
+
 ## Testing
 
 ### Test SNMP Access
