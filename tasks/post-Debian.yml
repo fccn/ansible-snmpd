@@ -1,5 +1,32 @@
 ---
 # allow snmpd to execute docker commands, like searching on logs or executing docker commands
+- name: Populate service facts
+  ansible.builtin.service_facts:
+  when: ansible_facts.services is not defined
+  tags:
+    - snmpd
+    - snmp
+    - snmpd_docker
+
+- name: Determine docker service state
+  ansible.builtin.set_fact:
+    snmpd_docker_service_state: >-
+      {{ ansible_facts.services['docker.service'].state
+         if ansible_facts.services['docker.service'] is defined
+         else 'not installed' }}
+  tags:
+    - snmpd
+    - snmp
+    - snmpd_docker
+
+- name: Show docker service state
+  ansible.builtin.debug:
+    msg: "docker service state: {{ snmpd_docker_service_state }} on {{ inventory_hostname }} server"
+  tags:
+    - snmpd
+    - snmp
+    - snmpd_docker
+
 - name: Adding existing user '{{ snmpd_post_debian_snmpd_user }}' to group docker
   user:
     name: "{{ snmpd_post_debian_snmpd_user }}"
@@ -7,7 +34,9 @@
     append: yes
   notify: restart snmpd
   ignore_errors: "{{ ansible_check_mode }}"
-  when: snmpd_post_debian_configure_user_docker
+  when:
+    - snmpd_post_debian_configure_user_docker
+    - snmpd_docker_service_state != 'not installed'
   tags:
     - snmpd
     - snmp
