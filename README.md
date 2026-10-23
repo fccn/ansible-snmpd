@@ -59,7 +59,7 @@ Use per-host or per-environment variables to customize monitoring parameters (co
   - Default: `"{{ inventory_hostname }}"`
   
 - `snmpd_sysdescr` - System description
-  - Default: `"{{ ansible_distribution }} {{ ansible_distribution_version }}"`
+  - Default: `"{{ ansible_facts.distribution }} {{ ansible_facts.distribution_version }}"`
 
 ### Access Control Variables
 
@@ -150,7 +150,7 @@ Or use dynamic configuration based on mounted filesystems:
 # In your playbook or group_vars
 snmpd_configs: |
   {% set disks = [] %}
-  {% for mount in ansible_mounts %}
+  {% for mount in ansible_facts.mounts %}
   {%   if mount.mount != '/' and mount.mount.startswith('/') and not mount.mount.startswith('/snap') %}
   {%     set _ = disks.append('disk ' + mount.mount + ' 80%') %}
   {%   endif %}
@@ -424,7 +424,7 @@ Ensure your monitoring systems themselves are monitored and their credentials ar
 
 ### OS Family Detection
 
-This role uses `ansible_os_family` to automatically select the correct package list and configuration:
+This role uses `ansible_facts.os_family` to automatically select the correct package list and configuration:
 - **Debian** family: Uses `setup-Debian.yml` and `post-Debian.yml`
 - **RedHat** family: Uses `setup-RedHat.yml` and `post-RedHat.yml`
 

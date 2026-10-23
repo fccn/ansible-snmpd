@@ -11,8 +11,8 @@
     - snmp
 
 - name: Include OS-specific setup tasks
-  include_tasks: "setup-{{ ansible_os_family }}.yml"
-  when: ansible_os_family in ['Debian', 'RedHat']
+  include_tasks: "setup-{{ ansible_facts.os_family }}.yml"
+  when: ansible_facts.os_family in ['Debian', 'RedHat']
   tags:
     - snmp
     - snmpd
@@ -37,8 +37,8 @@
     - snmp
 
 - name: Include OS-specific post-configuration tasks
-  include_tasks: "post-{{ ansible_os_family }}.yml"
-  when: ansible_os_family in ['Debian', 'RedHat']
+  include_tasks: "post-{{ ansible_facts.os_family }}.yml"
+  when: ansible_facts.os_family in ['Debian', 'RedHat']
   tags:
     - snmp
     - snmpd

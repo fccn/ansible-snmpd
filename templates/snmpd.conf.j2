@@ -64,7 +64,7 @@ realStorageUnits 0
 {% if snmpd_load is defined %}
 load {{ snmpd_load }}
 {% elif snmpd_load_auto_enabled %}
-load {{ ansible_processor_vcpus * snmpd_load_1min_factor }} {{ ansible_processor_vcpus * snmpd_load_5min_factor }} {{ ansible_processor_vcpus * snmpd_load_15min_factor }}
+load {{ ansible_facts.processor_vcpus * snmpd_load_1min_factor }} {{ ansible_facts.processor_vcpus * snmpd_load_5min_factor }} {{ ansible_facts.processor_vcpus * snmpd_load_15min_factor }}
 {% else %}
 #load 10
 {% endif %}

@@ -31,7 +31,7 @@ snmpd_post_debian_snmpd_additional_group: "docker"
 # System information
 snmpd_syscontact: "admin@example.com"
 snmpd_syslocation: "{{ inventory_hostname }}"
-snmpd_sysdescr: "{{ ansible_distribution }} {{ ansible_distribution_version }}"
+snmpd_sysdescr: "{{ ansible_facts.distribution }} {{ ansible_facts.distribution_version }}"
 
 # Access control
 snmpd_group_name: "MyROGroup"
@@ -39,7 +39,7 @@ snmpd_group_name: "MyROGroup"
 # Disk monitoring
 snmpd_disk_path: "/"
 snmpd_disk_threshold: "80%"
-snmpd_post_debian_configure_user_docker: "{{ ansible_distribution_version is version('20.04', '>=')}}"
+snmpd_post_debian_configure_user_docker: "{{ ansible_facts.distribution_version is version('20.04', '>=')}}"
 
 # Load monitoring
 # Set to true to auto-configure load thresholds based on CPU count
